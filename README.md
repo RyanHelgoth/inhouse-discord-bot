@@ -8,4 +8,4 @@
 - Once the bot is completed, commands and their uses will be listed here.
 
 # Who worked on Inhouse Discord Bot?
-- All the python code is written by Ryan Helgoth
+- All the Python code is written by Ryan Helgoth
