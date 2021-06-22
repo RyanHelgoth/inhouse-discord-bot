@@ -9,6 +9,7 @@ from discord.ext import commands
 import config
 import random
 
+#TODO organize code better
 
 def main():
     client = commands.Bot(command_prefix = "!")
@@ -59,18 +60,40 @@ def main():
         else:
             await ctx.send("You must first set team and main channels before using this command")
 
+    #TODO allow setting channels with multiple spaces (need to use qoutes)
+    #TODO check that channel exists
+    #TODO deal with channels withh the same name
+
     @client.command()
-    async def setTeam1(ctx, channelName):
+    async def setTeam1(ctx, *args):
+        channelName = " ".join(args)
         client.team1Channel = discord.utils.get(ctx.guild.channels, name = channelName)
+        if client.team1Channel == None:
+            await ctx.send("Could not find a channel named " + channelName + " please try again.")
+        else:
+            await ctx.send("Team 1 channel set to " + channelName)
+
+
+
         
 
     @client.command()
-    async def setTeam2(ctx, channelName):
+    async def setTeam2(ctx, *args):
+        channelName = " ".join(args)
         client.team2Channel = discord.utils.get(ctx.guild.channels, name = channelName)
+        if client.team2Channel == None:
+            await ctx.send("Could not find a channel named " + channelName + " please try again.")
+        else:
+            await ctx.send("Team 2 channel set to " + channelName)
 
     @client.command()
-    async def setMain(ctx, channelName):
+    async def setMain(ctx, *args):
+        channelName = " ".join(args)
         client.mainChannel = discord.utils.get(ctx.guild.channels, name = channelName)
+        if client.mainChannel == None:
+            await ctx.send("Could not find a channel named " + channelName + " please try again.")
+        else:
+            await ctx.send("Main channel set to " + channelName)
 
     @client.command()
     async def randomize(ctx):
@@ -81,15 +104,11 @@ def main():
                 half = len(members)//2
                 client.team1 = members[0:half]
                 client.team2 = members[half:len(members)]
-                '''
-                print("Left list: " + str(team1))
-                print("Right list: " + str(team2))
-                '''
             else:
                 await ctx.send("There must be 2 or more people in the " + client.mainChannel.name + " channel to use this command.")
         else:
             await ctx.send("You must first set team and main channels before using this command")
-    
+
     client.run(config.token)
 
 
