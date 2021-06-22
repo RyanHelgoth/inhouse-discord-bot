@@ -9,7 +9,7 @@
 
 # How can I run the code on my computer?
 - The code for this bot is available to download and modify, however the code will not run without a token. This token is private and I cannot share it for security reasons. 
-- To get your own token you will have to create a bot through the [Discord developer portal](https://discord.com/developers/applications). Then you can put the line token = "<YOUR TOKEN HERE>" into a file named config.py in the same folder as main.py and the code should now work for you. 
+- To get your own token you will have to create a bot through the [Discord developer portal](https://discord.com/developers/applications). Then you can put the line token = "/<YOUR TOKEN HERE/>" into a file named config.py in the same folder as main.py and the code should now work for you. 
 
 # Who worked on Inhouse Discord Bot?
 - All the Python code is written by Ryan Helgoth
