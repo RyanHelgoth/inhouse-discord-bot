@@ -31,6 +31,8 @@ def main():
     client = commands.Bot(command_prefix = "!", activity = botInfo, help_command = None, intents=intents)
 
     #using global varibles for now until I set up a database
+    #TODO store channel id's and arrays of user id's in database and get the actual objects on startup (maybe use pickle library)
+
     client.mainChannel = None
     client.team1Channel = None
     client.team2Channel = None
@@ -43,6 +45,9 @@ def main():
         #TODO get saved settings from database
         #https://stackoverflow.com/a/67145571
 
+    '''
+    This command displays help embed which contains a link explaining how to use the bot's commands.
+    '''
     @client.command()
     async def inhouseHelp(ctx):
         ''' 
@@ -50,7 +55,7 @@ def main():
         Author: stijndcl
         Date: Oct 25 '20 at 23:17
         License: SA 4.0
-        
+
         I used this post to learn how to send
         hyperlinks with the bot.
         '''
@@ -59,6 +64,9 @@ def main():
         help.description = ":keyboard: [Help and list of commands here!](https://github.com/RyanHelgoth/inhouse-discord-bot#how-do-you-use-the-bot)"
         await ctx.send(embed = help)
 
+    '''
+    This command moves the users in teams to their team voice channels.
+    '''
     @client.command()
     async def moveToTeams(ctx):
         if not None in (client.team1Channel, client.team2Channel):
@@ -80,9 +88,11 @@ def main():
         else:
             await ctx.send("You must first set team channels before using this command")
 
+    '''
+    This command moves the users in teams to the main channel.
+    '''
     @client.command()
     async def moveToMain(ctx):
-        # Checks that channels have been set 
         if client.mainChannel is not None:
             if len(client.team1) > 0 and len(client.team2) > 0:
                 for member in client.team1:
@@ -92,7 +102,6 @@ def main():
                         await ctx.send("Moved " + "<@" + str(member.id) + ">" + " to " + "<#" + str(client.mainChannel.id) + ">")
                     except discord.HTTPException:
                         await ctx.send("Error: Unable to move " + "<@" + str(member.id) + ">" + " to " + "<#" + str(client.mainChannel.id) + ">")
-            
                 for member in client.team2:
                     try:
                         await member.move_to(client.mainChannel)
@@ -104,20 +113,36 @@ def main():
         else:
             await ctx.send("You must first set the main channel before using this command")
 
+    '''
+    This command sets the team 1 voice channel.
+    '''
     @client.command()
     async def setTeam1(ctx, *args):
         await setChannel(ctx, args, "one")
-     
+    
+    '''
+    This command sets the team 2 voice channel.
+    '''
     @client.command()
     async def setTeam2(ctx, *args):
         await setChannel(ctx, args, "two")
 
+    '''
+    This command sets the main voice channel.
+    '''
     @client.command()
     async def setMain(ctx, *args):
         await setChannel(ctx, args, "main")
 
+    '''
+    This command randomly splits the users in the main channel into team 1 and team 2.
+    '''
     @client.command()
     async def randomize(ctx):
+        '''
+        Randomization is done by shuffling the members in the main channel
+        and then spliting the list of members in half to form two teams.
+        '''
         if client.mainChannel is not None:
             members = client.mainChannel.members
             if len(members) > 0: #TODO change 0 to 1 when done testing
@@ -132,18 +157,30 @@ def main():
         else:
             await ctx.send("You must first set the main channel before using this command")
 
+    '''
+    This command displays the members of team 1 and team 2.
+    '''
     @client.command()
     async def showTeams(ctx):
         await printTeams(ctx)
         
+    '''
+    This command allows the user to select members to put in team 1.
+    '''
     @client.command()
     async def makeTeam1(ctx, *args):
         await makeTeam(ctx, args, "one")
 
+    '''
+    This command allows the user to select members to put in team 2.
+    '''
     @client.command()
     async def makeTeam2(ctx, *args):
         await makeTeam(ctx, args, "two")
     
+    '''
+    This function displays the members in team 1 and 2.
+    '''
     async def printTeams(ctx):
         t1Members = []
         t2Members = []
@@ -153,11 +190,14 @@ def main():
             t2Members.append("<@" + str(member.id) + ">")
         await ctx.send(":video_game: Team 1: " + ", ".join(map(str, t1Members)))
         await ctx.send(":video_game: Team 2: " + ", ".join(map(str, t2Members)))
-        
+    
+    '''
+    This function sets the team or main channels.
+    '''
     async def setChannel(ctx, args, channel):
         channelName = " ".join(args)
-        
-        if channel== "one":
+
+        if channel == "one":
             team1 = discord.utils.get(ctx.guild.channels, name = channelName)
             if team1 is None:
                 await ctx.send("Could not find a channel named \"" + channelName + "\" please try again.")
@@ -185,20 +225,26 @@ def main():
                 client.mainChannel = mainChannel
                 await ctx.send("Main channel set to " + "<#" + str(mainChannel.id) + ">")
 
+    '''
+    This function puts members chosen by the user into teams.
+    '''
     async def makeTeam(ctx, args, team):
         members = []
         for arg in args:
-            memberID = arg[3:-1] #Strips away characters to get id from <@id>
-            
-            #NOTE: If there are still errors check that each member is not None
             try:
-                member = await ctx.guild.fetch_member(memberID) #TODO consider using: https://discordpy.readthedocs.io/en/latest/api.html#discord.Guild.get_member
-            except discord.HTTPException: #TODO consider catching forbidden error
-                await ctx.send("Error finding selected users. Please tag users you want to add, " + 
+                memberID = int(arg[3:-1]) #Strips away characters to get id from <@id>
+            except ValueError:
+                await ctx.send("Error: you entered an invalid user id. Please tag users you want to add, for example: @userName")
+                return
+
+            member = ctx.guild.get_member(memberID)
+
+            if member is None:
+                await ctx.send("Error: could not find one or more selected users. Please tag users you want to add, " + 
                 "for example: @userName. Please also seperate each tagged user with 1 space. ")
                 return
 
-            if(not member in members):
+            if not member in members:
                 members.append(member)
             else:
                 await ctx.send("Error: You can not add the same user to a team more than once.")
@@ -206,12 +252,13 @@ def main():
               
         if team == "one":
             if not set(members).isdisjoint(client.team2):
+                #Removes members in team 2 who are being added to team 1.
                 client.team2 = list(set(client.team2) - set(members))
                 await ctx.send("Note: some members have been moved from team 1 to team 2.")
             client.team1 = members
-            
         elif team == "two":
             if not set(members).isdisjoint(client.team1):
+                #Removes members in team 1 who are being added to team 2.
                 client.team1 = list(set(client.team1) - set(members))
                 await ctx.send("Note: some members have been moved from team 2 to team 1.")
             client.team2 = members
