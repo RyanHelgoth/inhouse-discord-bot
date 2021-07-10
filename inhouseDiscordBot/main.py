@@ -8,6 +8,9 @@ import discord
 from discord.ext import commands
 import config
 import random
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
 
 #TODO test moving offline users to a channel
 #TODO make function for move to main/teams
@@ -25,6 +28,11 @@ def main():
     were not found in voice channels due to not gaving the 
     members intent enabled.
     '''
+    cred = credentials.Certificate("firebaseKey.json")
+    firebase_admin.initialize_app(cred)
+    db = firestore.client()
+
+
     intents = discord.Intents().default()
     intents.members = True
     botInfo = discord.Activity(type=discord.ActivityType.watching, name="for !inhouseHelp command")
@@ -196,6 +204,9 @@ def main():
     '''
     async def setChannel(ctx, args, channel):
         channelName = " ".join(args)
+        serverID = str(ctx.guild.id)
+        userID = str(ctx.message.author.id)
+        docRef = db.collection("servers").document(serverID).collection("users").document(userID)
 
         if channel == "one":
             team1 = discord.utils.get(ctx.guild.channels, name = channelName)
@@ -223,6 +234,14 @@ def main():
                 await ctx.send("<#" + str(mainChannel.id) + ">" + " is not a voice channel, you can only set voice channels.")
             else:
                 client.mainChannel = mainChannel
+                
+
+                #https://cloud.google.com/firestore/docs/manage-data/add-data#set_a_document
+                
+                #Saves user's channel setting in db
+                data = {"voiceMain" : str(mainChannel.id)}
+                docRef.set(data)
+                
                 await ctx.send("Main channel set to " + "<#" + str(mainChannel.id) + ">")
 
     '''

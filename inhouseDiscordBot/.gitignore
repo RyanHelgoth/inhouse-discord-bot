@@ -1,3 +1,4 @@
 config.py
 randomizeTest.py
 **/__pycache__
+firebaseKey.json
