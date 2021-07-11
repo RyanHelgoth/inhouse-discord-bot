@@ -192,10 +192,26 @@ def main():
     async def printTeams(ctx):
         t1Members = []
         t2Members = []
-        for member in client.team1:
-            t1Members.append("<@" + str(member.id) + ">")
-        for member in client.team2:
-            t2Members.append("<@" + str(member.id) + ">")
+
+        serverID = str(ctx.guild.id)
+        userID = str(ctx.message.author.id)
+        docRef = db.collection("servers").document(serverID).collection("users").document(userID)
+        doc = docRef.get()
+    
+        if doc.exists:
+            data = doc.to_dict()
+            
+            if "team1" in data:
+                team1 = data["team1"]
+                for member in team1:
+                    t1Members.append("<@" + member + ">")
+
+            if "team2" in data:
+                team2 = data["team2"]
+                for member in team2:
+                    t1Members.append("<@" + member + ">")
+        
+        
         await ctx.send(":video_game: Team 1: " + ", ".join(map(str, t1Members)))
         await ctx.send(":video_game: Team 2: " + ", ".join(map(str, t2Members)))
     
@@ -208,23 +224,31 @@ def main():
         userID = str(ctx.message.author.id)
         docRef = db.collection("servers").document(serverID).collection("users").document(userID)
 
-        if channel == "one":
+        if channel == "one":      
             team1 = discord.utils.get(ctx.guild.channels, name = channelName)
             if team1 is None:
                 await ctx.send("Could not find a channel named \"" + channelName + "\" please try again.")
             elif str(team1.type) != "voice":
                 await ctx.send("<#" + str(team1.id) + ">" + " is not a voice channel, you can only set voice channels.")
             else:
-                client.team1Channel = team1
+                client.team1Channel = team1 #TODO Remove
+
+                data = {"voice1" : str(team1.id)}
+                docRef.set(data, merge = True)
+
                 await ctx.send("Team 1 channel set to " + "<#" + str(team1.id) + ">")
         elif channel == "two":
-            team2= discord.utils.get(ctx.guild.channels, name = channelName)
+            team2 = discord.utils.get(ctx.guild.channels, name = channelName)
             if team2 is None:
                 await ctx.send("Could not find a channel named \"" + channelName + "\" please try again.")
             elif str(team2.type) != "voice":
                 await ctx.send("<#" + str(team2.id) + ">" + " is not a voice channel, you can only set voice channels.")
             else:
-                client.team2Channel = team2
+                client.team2Channel = team2 #TODO Remove
+
+                data = {"voice2" : str(team2.id)}
+                docRef.set(data, merge = True)
+
                 await ctx.send("Team 2 channel set to " + "<#" + str(team2.id) + ">")
         elif channel == "main":
             mainChannel = discord.utils.get(ctx.guild.channels, name = channelName)
@@ -233,14 +257,14 @@ def main():
             elif str(mainChannel.type) != "voice":
                 await ctx.send("<#" + str(mainChannel.id) + ">" + " is not a voice channel, you can only set voice channels.")
             else:
-                client.mainChannel = mainChannel
+                client.mainChannel = mainChannel #TODO Remove
                 
-
+                
                 #https://cloud.google.com/firestore/docs/manage-data/add-data#set_a_document
                 
                 #Saves user's channel setting in db
                 data = {"voiceMain" : str(mainChannel.id)}
-                docRef.set(data)
+                docRef.set(data, merge = True)
                 
                 await ctx.send("Main channel set to " + "<#" + str(mainChannel.id) + ">")
 
@@ -248,7 +272,10 @@ def main():
     This function puts members chosen by the user into teams.
     '''
     async def makeTeam(ctx, args, team):
-        members = []
+        serverID = str(ctx.guild.id)
+        userID = str(ctx.message.author.id)
+        docRef = db.collection("servers").document(serverID).collection("users").document(userID)
+        members = []#NOTE members now contains user id string and not members objects
         for arg in args:
             try:
                 memberID = int(arg[3:-1]) #Strips away characters to get id from <@id>
@@ -264,23 +291,32 @@ def main():
                 return
 
             if not member in members:
-                members.append(member)
+                members.append(str(member.id))
             else:
                 await ctx.send("Error: You can not add the same user to a team more than once.")
                 return
               
         if team == "one":
+            #TODO fix this check to work with database
             if not set(members).isdisjoint(client.team2):
                 #Removes members in team 2 who are being added to team 1.
                 client.team2 = list(set(client.team2) - set(members))
                 await ctx.send("Note: some members have been moved from team 1 to team 2.")
             client.team1 = members
+            
+            data = {"team1" : members}
+            docRef.set(data, merge = True)
+        
         elif team == "two":
             if not set(members).isdisjoint(client.team1):
                 #Removes members in team 1 who are being added to team 2.
                 client.team1 = list(set(client.team1) - set(members))
                 await ctx.send("Note: some members have been moved from team 2 to team 1.")
             client.team2 = members
+
+            data = {"team2" : members}
+            docRef.set(data, merge = True)
+
         await ctx.send("Teams successfully updated!")
         await printTeams(ctx)
         
