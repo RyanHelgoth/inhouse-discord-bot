@@ -16,8 +16,15 @@ from firebase_admin import firestore
 #TODO make function for move to main/teams
 #TODO move functions into seperate file
 #TODO deal with channels withh the same name
+#TODO get rid of client vars
+#TODO update firestore security settings
 
 def main():
+    cred = credentials.Certificate("firebaseKey.json")
+    firebase_admin.initialize_app(cred)
+    db = firestore.client()
+
+
     ''' 
     Link: https://stackoverflow.com/a/65368556
     Author: kubaki18
@@ -28,11 +35,6 @@ def main():
     were not found in voice channels due to not gaving the 
     members intent enabled.
     '''
-    cred = credentials.Certificate("firebaseKey.json")
-    firebase_admin.initialize_app(cred)
-    db = firestore.client()
-
-
     intents = discord.Intents().default()
     intents.members = True
     botInfo = discord.Activity(type=discord.ActivityType.watching, name="for !inhouseHelp command")
@@ -151,19 +153,46 @@ def main():
         Randomization is done by shuffling the members in the main channel
         and then spliting the list of members in half to form two teams.
         '''
-        if client.mainChannel is not None:
-            members = client.mainChannel.members
-            if len(members) > 0: #TODO change 0 to 1 when done testing
-                random.shuffle(members)
-                half = len(members)//2
-                client.team1 = members[0:half]
-                client.team2 = members[half:len(members)]
-                await printTeams(ctx)
+        serverID = str(ctx.guild.id)
+        userID = str(ctx.message.author.id)
+        docRef = db.collection("servers").document(serverID).collection("users").document(userID)
+        doc = docRef.get()
+
+        if doc.exists:
+            data = doc.to_dict()
+            if "voiceMain" in data:
+                '''
+                Channel IDs should always be integers, but I put this try block 
+                here just in case the data gets corrupted somehow leading to a non-numerical ID.
+                '''
+                try:
+                    channelID = int(data["voiceMain"]) 
+                except ValueError:
+                    await ctx.send("Error: main channel preference was corrupted, please set it again.") 
+                    return
+                
+                mainChannel = discord.utils.get(ctx.guild.channels, id = channelID) #Returns None if channel is not found
+                if mainChannel is None:
+                    await ctx.send("Error: couldn't find mainChannel, please try setting it again.") 
+                else:
+                    members = mainChannel.members
+                    memberIDS = [str(member.id) for member in members]
+                    if len(memberIDS) > 0: #TODO change 0 to 1 when done testing
+                        random.shuffle(memberIDS)
+                        half = len(memberIDS)//2
+                        team1 = memberIDS[0:half]
+                        team2 = memberIDS[half:len(memberIDS)]
+                        data = {"team1" : team1, "team2" : team2}
+                        docRef.set(data, merge = True)
+                        await printTeams(ctx)
+                    else:
+                        await ctx.send("There must be 2 or more people in the " + "<#" 
+                        + str(channelID) + ">" + " channel to use this command.")
             else:
-                await ctx.send("There must be 2 or more people in the " + "<#" 
-                + str(client.mainChannel.id) + ">" + " channel to use this command.")
+                await ctx.send("You must first set the main channel before using this command") 
         else:
-            await ctx.send("You must first set the main channel before using this command")
+           await ctx.send("You must first set the main channel before using this command") 
+
 
     '''
     This command displays the members of team 1 and team 2.
@@ -209,7 +238,7 @@ def main():
             if "team2" in data:
                 team2 = data["team2"]
                 for member in team2:
-                    t1Members.append("<@" + member + ">")
+                    t2Members.append("<@" + member + ">")
         
         
         await ctx.send(":video_game: Team 1: " + ", ".join(map(str, t1Members)))
@@ -275,7 +304,9 @@ def main():
         serverID = str(ctx.guild.id)
         userID = str(ctx.message.author.id)
         docRef = db.collection("servers").document(serverID).collection("users").document(userID)
+        doc = docRef.get()
         members = []#NOTE members now contains user id string and not members objects
+
         for arg in args:
             try:
                 memberID = int(arg[3:-1]) #Strips away characters to get id from <@id>
@@ -297,23 +328,38 @@ def main():
                 return
               
         if team == "one":
-            #TODO fix this check to work with database
-            if not set(members).isdisjoint(client.team2):
-                #Removes members in team 2 who are being added to team 1.
-                client.team2 = list(set(client.team2) - set(members))
-                await ctx.send("Note: some members have been moved from team 1 to team 2.")
+            if doc.exists:
+                data = doc.to_dict()
+
+                if "team2" in data:
+                    team2 = data["team2"]
+                    if not set(members).isdisjoint(team2):
+                        #Removes members in team 2 who are being added to team 1.
+                        team2 = list(set(team2) - set(members))
+                        team2Data = {"team2" : team2}
+                        docRef.set(team2Data, merge = True)
+                        await ctx.send("Note: some members have been moved from team 1 to team 2.")
+            
             client.team1 = members
             
             data = {"team1" : members}
             docRef.set(data, merge = True)
-        
+                    
         elif team == "two":
-            if not set(members).isdisjoint(client.team1):
-                #Removes members in team 1 who are being added to team 2.
-                client.team1 = list(set(client.team1) - set(members))
-                await ctx.send("Note: some members have been moved from team 2 to team 1.")
-            client.team2 = members
+            if doc.exists:
+                data = doc.to_dict()
 
+                if "team1" in data:
+                    team1 = data["team1"]
+                    if not set(members).isdisjoint(team1):
+                        #Removes members in team 1 who are being added to team 2.
+                        team1 = list(set(team1) - set(members))
+                        team1Data = {"team1" : team1}
+                        docRef.set(team1Data, merge = True)
+                        await ctx.send("Note: some members have been moved from team 2 to team 1.")
+            
+            client.team2 = members
+            
             data = {"team2" : members}
             docRef.set(data, merge = True)
 
