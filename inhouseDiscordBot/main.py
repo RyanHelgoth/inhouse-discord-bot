@@ -9,12 +9,12 @@ from helperFunctions import commands as cmd
 from helperFunctions import setup 
 
 #TODO update firestore security settings
+#TODO change command names
+#TODO add user names to messages
 
 def main():
-    
     client = setup.getClient()
    
-
     @client.event
     async def on_ready():
         print("Bot has come online")
@@ -27,7 +27,7 @@ def main():
         await cmd.help(ctx)
 
     '''
-    This command moves the users in teams to their team voice channels.
+    This command moves the users in teams to their corresponding team voice channels.
     '''
     @client.command()
     async def moveToTeams(ctx):
@@ -40,7 +40,6 @@ def main():
     async def moveToMain(ctx):
         await cmd.moveUsers(ctx, "main")
      
-
     '''
     This command sets the team 1 voice channel.
     '''
@@ -69,7 +68,6 @@ def main():
     async def randomize(ctx):
         await cmd.randomizeMain(ctx)
  
-
     '''
     This command displays the members of team 1 and team 2.
     '''
@@ -90,9 +88,7 @@ def main():
     @client.command()
     async def makeTeam2(ctx, *args):
         await cmd.makeTeam(ctx, args, "two")
-    
 
-        
     client.run(config.botToken)
 
 if __name__ == "__main__":
