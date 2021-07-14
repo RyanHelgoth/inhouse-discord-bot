@@ -4,6 +4,7 @@ Code written by Ryan Helgoth, references I used have been cited in the comments.
 This is file contains code for commands used by the bot.
 '''
 
+#TODO remove later
 ''' 
 Link: https://stackoverflow.com/a/27365730
 Author: Kevin
@@ -13,11 +14,8 @@ License: SA 3.0
 I used this post to help fix an issue 
 I had with importing "setup".
 '''
-from . import setup
 import discord 
 import random
-
-db = setup.getDB()
 
 #TODO
 '''
@@ -55,54 +53,39 @@ async def help(ctx):
 '''
 This function displays the members in team 1 and 2.
 '''
-async def printTeams(ctx):
-    t1Members = []
-    t2Members = []
+async def printTeams(ctx, db):
+    teams = {"team1" : [], "team2" : []} #Lists in dictionary are for holding user ids.
     docRef = getDocRef(ctx, db)
     doc = docRef.get()
 
     if doc.exists:
         data = doc.to_dict()
-        if "team1" in data:
-            team1 = data["team1"]
-            for memberID in team1:
-                try:
-                    memberID = int(memberID) 
-                except ValueError:
-                    await ctx.send("Error: team 1 is corrupted, please make team 1 again.") 
-                    return
-                
-                member = ctx.guild.get_member(memberID)
-                if member is None:
-                    await ctx.send("Error: could not find one or more users, please make team 1 again.")
-                    return
-                else:
-                    t1Members.append("<@" + str(memberID) + ">")
-
-        if "team2" in data:
-            team2 = data["team2"]
-            for memberID in team2:
-                try:
-                    memberID = int(memberID) 
-                except ValueError:
-                    await ctx.send("Error: team 2 is corrupted, please make team 2 again.") 
-                    return
-
-                member = ctx.guild.get_member(memberID)
-                if member is None:
-                    await ctx.send("Error: could not find one or more users, please make team 2 again.")
-                    return
-                else:
-                    t1Members.append("<@" + str(memberID) + ">")
-    
-    await ctx.send(":video_game: Team 1: " + ", ".join(map(str, t1Members)))
-    await ctx.send(":video_game: Team 2: " + ", ".join(map(str, t2Members)))
+        for team in teams:
+            teamName = "T" + team[1:4] + " " + team[-1] #Gets "Team X" string from "teamX" string.
+            if team in data:
+                teamMembers = data[team]
+                for memberID in teamMembers:
+                    try:
+                        memberID = int(memberID) 
+                    except ValueError:
+                        await ctx.send("Error: {} is corrupted, please make {} again.".format(teamName)) 
+                        return
+                    
+                    member = ctx.guild.get_member(memberID)
+                    if member is None:
+                        await ctx.send("Error: could not find one or more users, please make {} again.".format(teamName))
+                        return
+                    else:
+                        teams[team].append("<@" + str(memberID) + ">")
+            await ctx.send(":video_game: {}: {}".format(teamName, ", ".join(map(str, teams[team]))))
+    else:
+        await ctx.send("Could not find any saved teams, please create teams.")
 
 '''
 Randomly splits users from the main channel into 2 teams and saves them
 in the database for the user who entered the command.
 '''
-async def randomizeMain(ctx):
+async def randomizeMain(ctx, db):
     '''
     Randomization is done by shuffling the members in the main channel
     and then spliting the list of members in half to form two teams.
@@ -132,7 +115,7 @@ async def randomizeMain(ctx):
                     team2 = memberIDS[half:len(memberIDS)]
                     data = {"team1" : team1, "team2" : team2}
                     docRef.set(data, merge = True)
-                    await printTeams(ctx)
+                    await printTeams(ctx, db)
                 else:
                     await ctx.send("There must be 2 or more people in the " + "<#" 
                     + str(channelID) + ">" + " channel to use this command.")
@@ -145,7 +128,7 @@ async def randomizeMain(ctx):
 This function lets the user pick a preference for their main
 channel and then saves it in the database. 
 '''
-async def setChannel(ctx, args, channel):
+async def setChannel(ctx, db, args, channel):
     channelName = " ".join(args)
     docRef = getDocRef(ctx, db)
 
@@ -186,7 +169,7 @@ async def setChannel(ctx, args, channel):
 This function lets the user make a team and then then saves the team 
 in the database.
 '''
-async def makeTeam(ctx, args, team):
+async def makeTeam(ctx, db, args, team):
     docRef = getDocRef(ctx, db)
     doc = docRef.get()
     members = [] #NOTE members list now contains user id strings and not member objects
@@ -241,12 +224,12 @@ async def makeTeam(ctx, args, team):
         docRef.set(data, merge = True)
 
     await ctx.send("Teams successfully updated!")
-    await printTeams(ctx)
+    await printTeams(ctx, db)
 
 '''
 Moves users to a voice channel set by the user.
 '''
-async def moveUsers(ctx, location):
+async def moveUsers(ctx, db, location):
     docRef = getDocRef(ctx, db)
     doc = docRef.get()
 

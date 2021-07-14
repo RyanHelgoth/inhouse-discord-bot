@@ -14,6 +14,7 @@ from helperFunctions import setup
 
 def main():
     client = setup.getClient()
+    db = setup.getDB()
    
     @client.event
     async def on_ready():
@@ -31,63 +32,63 @@ def main():
     '''
     @client.command()
     async def moveToTeams(ctx):
-        await cmd.moveUsers(ctx, "teams")
+        await cmd.moveUsers(ctx, db, "teams")
 
     '''
     This command moves the users in teams to the main channel.
     '''
     @client.command()
     async def moveToMain(ctx):
-        await cmd.moveUsers(ctx, "main")
+        await cmd.moveUsers(ctx, db, "main")
      
     '''
     This command sets the team 1 voice channel.
     '''
     @client.command()
     async def setTeam1(ctx, *args):
-        await cmd.setChannel(ctx, args, "one")
+        await cmd.setChannel(ctx, db, args, "one")
     
     '''
     This command sets the team 2 voice channel.
     '''
     @client.command()
     async def setTeam2(ctx, *args):
-        await cmd.setChannel(ctx, args, "two")
+        await cmd.setChannel(ctx, db, args, "two")
 
     '''
     This command sets the main voice channel.
     '''
     @client.command()
     async def setMain(ctx, *args):
-        await cmd.setChannel(ctx, args, "main")
+        await cmd.setChannel(ctx, db, args, "main")
 
     '''
     This command randomly splits the users in the main channel into team 1 and team 2.
     '''
     @client.command()
     async def randomize(ctx):
-        await cmd.randomizeMain(ctx)
+        await cmd.randomizeMain(ctx, db)
  
     '''
     This command displays the members of team 1 and team 2.
     '''
     @client.command()
     async def showTeams(ctx):
-        await cmd.printTeams(ctx)
+        await cmd.printTeams(ctx, db)
         
     '''
     This command allows the user to select members to put in team 1.
     '''
     @client.command()
     async def makeTeam1(ctx, *args):
-        await cmd.makeTeam(ctx, args, "one")
+        await cmd.makeTeam(ctx, db, args, "one")
 
     '''
     This command allows the user to select members to put in team 2.
     '''
     @client.command()
     async def makeTeam2(ctx, *args):
-        await cmd.makeTeam(ctx, args, "two")
+        await cmd.makeTeam(ctx, db, args, "two")
 
     client.run(config.botToken)
 
