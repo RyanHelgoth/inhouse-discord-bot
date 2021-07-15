@@ -7,16 +7,37 @@
 # How do you use the bot?
 - # Overview
 - # Commands
-  - "!inhousehelp": Shows an embed with a link to this page.
-  - "!showteams": Shows members of the command user's team 1 and team 2.
-  - "!setmainchat": Sets the command user's main voice channel.
-  - "!setteamchat1": Sets the command user's team 1 voice channel.
-  - "!setteamchat2": Sets the command user's team 2 voice channel.
-  - "!maketeam1": Sets the command user's list of team members for their team 1.
-  - "!maketeam2": Sets the command user's list of team members for their team 2.
-  - "!randomize": Creates a randomized team 1 and team 2 for the command user with members from their main channel. 
-  - "!movetoteams": Moves the command user's team 1 and team 2 members to the command user's corresponding team channels.
-  - "!movetomain": Moves the command user's team 1 and team 2 members to the command user's main channel.
+  - **!inhousehelp** \- Shows an embed with a link to this page.
+    - **Arguments:** none
+    <br/>
+  - **!showteams** \- Shows members of the command user's team 1 and team 2. 
+    - **Arguments:** none
+    <br/>
+  - **!setmainchat** \- Sets the command user's main voice channel.
+    - **Arguments:** name of channel you want to set.
+    <br/>
+  - **!setteamchat1** \- Sets the command user's team 1 voice channel.
+    - **Arguments:** name of channel you want to set.
+    <br/>
+  - **!setteamchat2** \- Sets the command user's team 2 voice channel.
+    - **Arguments:** name of channel you want to set.
+    <br/>
+  - **!maketeam1** \- Sets the command user's list of team members for their team 1.
+    - **Arguments:** tagged users seperated by spaces (either select users by typing "@" and then picking users, or by typing <@\*> where the "\*" is a user id).
+    <br/>
+  - **!maketeam2** \- Sets the command user's list of team members for their team 2.
+    - **Arguments:** tagged users seperated by spaces (either select users by typing "@" and then picking users, or by typing <@\*> where the "\*" is a user id).
+    <br/>
+  - **!randomize** \- Creates a randomized team 1 and team 2 for the command user with members from their main channel. 
+    - **Arguments:** none
+    <br/>
+  - **!movetoteams** \- Moves the command user's team 1 and team 2 members to the command user's corresponding team channels.
+    - **Arguments:** none
+    <br/>
+  - **!movetomain** \- Moves the command user's team 1 and team 2 members to the command user's main channel.
+    - **Arguments:** none
+    
+   
     
 
 # How can I run the code on my computer?
