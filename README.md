@@ -5,7 +5,19 @@
 - Currently the bot is under development, but after it is done a link will be posted here to add the bot to your server.
 
 # How do you use the bot?
-- Once the bot is completed, commands and their uses will be listed here.
+- # Overview
+- # Commands
+  - "!inhousehelp": Shows an embed with a link to this page.
+  - "!showteams": Shows members of the command user's team 1 and team 2.
+  - "!setmainchat": Sets the command user's main voice channel.
+  - "!setteamchat1": Sets the command user's team 1 voice channel.
+  - "!setteamchat2": Sets the command user's team 2 voice channel.
+  - "!maketeam1": Sets the command user's list of team members for their team 1.
+  - "!maketeam2": Sets the command user's list of team members for their team 2.
+  - "!randomize": Creates a randomized team 1 and team 2 for the command user with members from their main channel. 
+  - "!movetoteams": Moves the command user's team 1 and team 2 members to the command user's corresponding team channels.
+  - "!movetomain": Moves the command user's team 1 and team 2 members to the command user's main channel.
+    
 
 # How can I run the code on my computer?
 - The code for this bot is available to download and modify, however the code will not run without a token. This token is private and I cannot share it for security reasons. 
