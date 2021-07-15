@@ -25,7 +25,7 @@ async def sendToTeams(ctx, doc, teams):
         if "voice1" in data and "voice2" in data and "team1" in data and "team2" in data:
             for team in teams:
                 channelRef = teams[team]
-                teamName = team[0:4] + " " + team[-1] #Gets "team X" string from "teamX" string. 
+                teamName = team[:4] + " " + team[-1] #Gets "team X" string from "teamX" string. 
                 try:
                     channelID = int(data[channelRef]) 
                 except ValueError:

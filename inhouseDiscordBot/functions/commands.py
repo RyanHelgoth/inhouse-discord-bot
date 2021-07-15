@@ -44,10 +44,10 @@ async def printTeams(ctx, db):
     docRef = ch.getDocRef(ctx, db)
     doc = docRef.get()
 
-    #TODO allow display of team 2 despite an error with team 1
     if doc.exists:
         data = doc.to_dict()
         for team in teams:
+            error = False
             teamName = "T" + team[1:4] + " " + team[-1] #Gets "Team X" string from "teamX" string.
             if team in data:
                 teamMembers = data[team]
@@ -55,16 +55,19 @@ async def printTeams(ctx, db):
                     try:
                         memberID = int(memberID) 
                     except ValueError:
-                        await ctx.send("Error: <@{0}>'s {1} is corrupted, please make your {1} again.".format(userID, teamName)) 
-                        return 
+                        await ctx.send("Error: <@{0}>'s {1} is corrupted, please make your {1} again.".format(userID, teamName.lower())) 
+                        error = True
+                        break #Trys to show team 2 even if there is an error with team 1
                     
                     member = ctx.guild.get_member(memberID)
                     if member is None:
-                        await ctx.send("Error: could not find one or more users in <@{0}>'s {1}, please make your {1} again.".format(userID, teamName))
-                        return 
+                        await ctx.send("Error: could not find one or more users in <@{0}>'s {1}, please make your {1} again.".format(userID, teamName.lower()))
+                        error = True
+                        break #Trys to show team 2 even if there is an error with team 1
                     else:
                         teams[team].append("<@" + str(memberID) + ">")
-            await ctx.send("<@{0}>'s :video_game: {1}: {2}".format(userID, teamName, ", ".join(map(str, teams[team]))))
+            if not error:
+                await ctx.send("<@{0}>'s :video_game: {1}: {2}".format(userID, teamName, ", ".join(map(str, teams[team]))))
     else:
         await ctx.send("Could not find any saved teams, please create teams.")
 
@@ -103,6 +106,7 @@ async def randomizeMain(ctx, db):
                     team2 = memberIDS[half:len(memberIDS)]
                     data = {"team1" : team1, "team2" : team2}
                     docRef.set(data, merge = True)
+                    await ctx.send("Random teams were made from users in <#{}>:".format(channelID))  
                     await printTeams(ctx, db)
                 else:
                     await ctx.send("There must be 2 or more people in the <#{}> channel to use this command.".format(channelID)) 
@@ -129,7 +133,7 @@ async def setChannel(ctx, db, args, chat):
     else:
         data = {chats[chat] : str(channel.id)}
         docRef.set(data, merge = True)
-        await ctx.send("<@{}>'s {} channel set to <#{}>".format(userID, chat, channel.id))
+        await ctx.send("<@{}>'s {} channel set to <#{}>".format(userID, chat.lower(), channel.id))
 
 '''
 This function lets the user make a team and then then saves the team 

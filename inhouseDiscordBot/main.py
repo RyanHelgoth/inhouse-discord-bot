@@ -6,10 +6,8 @@ This is file contains the code that runs the bot.
 
 from tokens import config
 from functions import commands as cmd
-from functions import setup 
-
-#TODO check if team string is lower case for all functions
-#TODO catch expception for unknown commands https://stackoverflow.com/a/52900437
+from functions import setup
+from discord.ext.commands import CommandNotFound 
 
 def main():
     client = setup.getClient()
@@ -27,6 +25,25 @@ def main():
     async def on_disconnect():
         print("Bot has disconnected")
 
+    ''' 
+    Link: https://stackoverflow.com/a/52900437
+    Author: Patrick Haugh
+    Date: Oct 19 '18 at 22:04
+    License: SA 4.0
+
+    I used this post to learn how to 
+    prevent CommandNotFound errors 
+    from cluttering the terminal.
+    '''
+    @client.event 
+    async def on_command_error(ctx, error): 
+        '''
+        Prevents terminal from being filled with errors every time a user
+        enters a message starting with "!" that is not a command for this bot.
+        '''
+        if not isinstance(error, CommandNotFound): 
+            raise error
+        
     '''
     This command displays help embed which contains a link explaining how to use the bot's commands.
     '''

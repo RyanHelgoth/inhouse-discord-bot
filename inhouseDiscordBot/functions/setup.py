@@ -9,6 +9,7 @@ from discord.ext import commands
 import firebase_admin
 from firebase_admin import credentials 
 from firebase_admin import firestore
+import os
 
 '''
 This function sets up the bot and returns the bot client.
@@ -34,7 +35,8 @@ def getClient():
 This object sets up the db and returns the db object.
 '''
 def getDB():
-    cred = credentials.Certificate("tokens\\firebaseKey.json")
+    keyPath = os.path.join("tokens", "firebaseKey.json")
+    cred = credentials.Certificate(keyPath)
     firebase_admin.initialize_app(cred)
     db = firestore.client()
     return db
