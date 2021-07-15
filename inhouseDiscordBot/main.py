@@ -8,10 +8,8 @@ from tokens import config
 from functions import commands as cmd
 from functions import setup 
 
-#TODO update firestore security settings
-#TODO change command names
-#TODO add user names to messages
-#TODO test what happens when the internet cuts out while bot is running (will it restart when the internet comes back?)
+#TODO check if team string is lower case for all functions
+#TODO catch expception for unknown commands https://stackoverflow.com/a/52900437
 
 def main():
     client = setup.getClient()
@@ -21,46 +19,54 @@ def main():
     async def on_ready():
         print("Bot has come online")
 
+    @client.event
+    async def on_resumed():
+        print("Bot has reconnected")
+
+    @client.event
+    async def on_disconnect():
+        print("Bot has disconnected")
+
     '''
     This command displays help embed which contains a link explaining how to use the bot's commands.
     '''
     @client.command()
-    async def inhouseHelp(ctx):
+    async def inhousehelp(ctx):
         await cmd.help(ctx)
 
     '''
     This command moves the users in teams to their corresponding team voice channels.
     '''
     @client.command()
-    async def moveToTeams(ctx):
+    async def movetoteams(ctx):
         await cmd.moveToChannel(ctx, db, "teams")
 
     '''
     This command moves the users in teams to the main channel.
     '''
     @client.command()
-    async def moveToMain(ctx):
+    async def movetomain(ctx):
         await cmd.moveToChannel(ctx, db, "main")
      
     '''
     This command sets the team 1 voice channel.
     '''
     @client.command()
-    async def setTeam1(ctx, *args):
+    async def setteamchat1(ctx, *args):
         await cmd.setChannel(ctx, db, args, "Team 1")
     
     '''
     This command sets the team 2 voice channel.
     '''
     @client.command()
-    async def setTeam2(ctx, *args):
+    async def setteamchat2(ctx, *args):
         await cmd.setChannel(ctx, db, args, "Team 2")
 
     '''
     This command sets the main voice channel.
     '''
     @client.command()
-    async def setMain(ctx, *args):
+    async def setmainchat(ctx, *args):
         await cmd.setChannel(ctx, db, args, "Main")
 
     '''
@@ -74,21 +80,21 @@ def main():
     This command displays the members of team 1 and team 2.
     '''
     @client.command()
-    async def showTeams(ctx):
+    async def showteams(ctx):
         await cmd.printTeams(ctx, db)
         
     '''
     This command allows the user to select members to put in team 1.
     '''
     @client.command()
-    async def makeTeam1(ctx, *args):
+    async def maketeam1(ctx, *args):
         await cmd.makeTeam(ctx, db, args, "Team 1")
 
     '''
     This command allows the user to select members to put in team 2.
     '''
     @client.command()
-    async def makeTeam2(ctx, *args):
+    async def maketeam2(ctx, *args):
         await cmd.makeTeam(ctx, db, args, "Team 2")
 
     client.run(config.botToken)

@@ -4,7 +4,6 @@ Code written by Ryan Helgoth, references I used have been cited in the comments.
 This is file contains code for commands used by the bot.
 '''
 
-#TODO remove later
 ''' 
 Link: https://stackoverflow.com/a/27365730
 Author: Kevin
@@ -17,13 +16,6 @@ I had with importing "commandHelpers".
 from . import commandHelpers as ch
 import discord 
 import random
-
-#TODO
-'''
--add comments
--change value from 0 to 1
--use format on strings
-'''
 
 '''
 Displays help embed which contains a link explaining how to use the bot's commands.
@@ -52,6 +44,7 @@ async def printTeams(ctx, db):
     docRef = ch.getDocRef(ctx, db)
     doc = docRef.get()
 
+    #TODO allow display of team 2 despite an error with team 1
     if doc.exists:
         data = doc.to_dict()
         for team in teams:
@@ -63,12 +56,12 @@ async def printTeams(ctx, db):
                         memberID = int(memberID) 
                     except ValueError:
                         await ctx.send("Error: <@{0}>'s {1} is corrupted, please make your {1} again.".format(userID, teamName)) 
-                        return
+                        return 
                     
                     member = ctx.guild.get_member(memberID)
                     if member is None:
                         await ctx.send("Error: could not find one or more users in <@{0}>'s {1}, please make your {1} again.".format(userID, teamName))
-                        return
+                        return 
                     else:
                         teams[team].append("<@" + str(memberID) + ">")
             await ctx.send("<@{0}>'s :video_game: {1}: {2}".format(userID, teamName, ", ".join(map(str, teams[team]))))
@@ -103,7 +96,7 @@ async def randomizeMain(ctx, db):
             else:
                 members = mainChannel.members
                 memberIDS = [str(member.id) for member in members]
-                if len(memberIDS) > 0: #TODO change 0 to 1 when done testing
+                if len(memberIDS) > 1: 
                     random.shuffle(memberIDS)
                     half = len(memberIDS) // 2
                     team1 = memberIDS[0:half]
