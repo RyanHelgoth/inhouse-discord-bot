@@ -5,12 +5,13 @@ This is file contains the code that runs the bot.
 '''
 
 from tokens import config
-from helperFunctions import commands as cmd
-from helperFunctions import setup 
+from functions import commands as cmd
+from functions import setup 
 
 #TODO update firestore security settings
 #TODO change command names
 #TODO add user names to messages
+#TODO test what happens when the internet cuts out while bot is running (will it restart when the internet comes back?)
 
 def main():
     client = setup.getClient()
@@ -32,14 +33,14 @@ def main():
     '''
     @client.command()
     async def moveToTeams(ctx):
-        await cmd.moveUsers(ctx, db, "teams")
+        await cmd.moveToChannel(ctx, db, "teams")
 
     '''
     This command moves the users in teams to the main channel.
     '''
     @client.command()
     async def moveToMain(ctx):
-        await cmd.moveUsers(ctx, db, "main")
+        await cmd.moveToChannel(ctx, db, "main")
      
     '''
     This command sets the team 1 voice channel.

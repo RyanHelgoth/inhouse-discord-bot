@@ -12,26 +12,18 @@ Date: Dec 8 '14 at 19:50
 License: SA 3.0
 
 I used this post to help fix an issue 
-I had with importing "setup".
+I had with importing "commandHelpers".
 '''
+from . import commandHelpers as ch
 import discord 
 import random
 
 #TODO
 '''
--Move helperFunctions to new file called helperFunctions.py
--rename folder from helperFunctions to code
--split repeated parts into helper functions and put them in helperFunctions.py
 -add comments
 -change value from 0 to 1
 -use format on strings
 '''
-
-def getDocRef(ctx, db):
-    serverID = str(ctx.guild.id)
-    userID = str(ctx.message.author.id)
-    docRef = db.collection("servers").document(serverID).collection("users").document(userID)
-    return docRef
 
 '''
 Displays help embed which contains a link explaining how to use the bot's commands.
@@ -56,7 +48,7 @@ This function displays the members in team 1 and 2.
 '''
 async def printTeams(ctx, db):
     teams = {"team1" : [], "team2" : []} #Keys are db vars and values are for holding user ids.
-    docRef = getDocRef(ctx, db)
+    docRef = ch.getDocRef(ctx, db)
     doc = docRef.get()
 
     if doc.exists:
@@ -91,7 +83,7 @@ async def randomizeMain(ctx, db):
     Randomization is done by shuffling the members in the main channel
     and then spliting the list of members in half to form two teams.
     '''
-    docRef = getDocRef(ctx, db)
+    docRef = ch.getDocRef(ctx, db)
     doc = docRef.get()
 
     if doc.exists:
@@ -131,7 +123,7 @@ channel and then saves it in the database.
 '''
 async def setChannel(ctx, db, args, chat):
     channelName = " ".join(args)
-    docRef = getDocRef(ctx, db)
+    docRef = ch.getDocRef(ctx, db)
     chats = {"Team 1" : "voice1", "Team 2" : "voice2", "Main" : "voiceMain"} #Values are the variable names in the db.
     channel = discord.utils.get(ctx.guild.channels, name = channelName)
 
@@ -149,7 +141,7 @@ This function lets the user make a team and then then saves the team
 in the database.
 '''
 async def makeTeam(ctx, db, args, teamName):
-    docRef = getDocRef(ctx, db)
+    docRef = ch.getDocRef(ctx, db)
     doc = docRef.get()
     members = [] #NOTE this list now contains user id strings and not member objects.
     teams = {"Team 1" : "team1", "Team 2" : "team2"}
@@ -198,129 +190,12 @@ async def makeTeam(ctx, db, args, teamName):
 '''
 Moves users to a voice channel set by the user.
 '''
-async def moveUsers(ctx, db, location):
-    docRef = getDocRef(ctx, db)
+async def moveToChannel(ctx, db, location):
+    docRef = ch.getDocRef(ctx, db)
     doc = docRef.get()
+    teams = {"team1" : "voice1", "team2" : "voice2"} #Keys are db var names for lists of member ids and values are db vars for channel ids.
 
     if location == "teams":
-        if doc.exists:
-            data = doc.to_dict()
-            if "voice1" in data and "voice2" in data and "team1" in data and "team2" in data:
-                try:
-                    team1ID = int(data["voice1"]) 
-                except ValueError:
-                    await ctx.send("Error: team 1 channel preference was corrupted, please set it again.") 
-                    return
-
-                try:
-                    team2ID = int(data["voice2"]) 
-                except ValueError:
-                    await ctx.send("Error: team 2 channel preference was corrupted, please set it again.") 
-                    return
-                
-                team1Channel = discord.utils.get(ctx.guild.channels, id = team1ID) 
-                team2Channel = discord.utils.get(ctx.guild.channels, id = team2ID) 
-                
-                if team1Channel is None:
-                    await ctx.send("Error: couldn't find team 1 channel, please try setting it again.") 
-                elif team2Channel is None:
-                    await ctx.send("Error: couldn't find team 2 channel, please try setting it again.") 
-                else:
-                    team1 = data["team1"]
-                    team2 = data["team2"]
-                    for memberID in team1:
-                        try:
-                            memberID = int(memberID) 
-                        except ValueError:
-                            await ctx.send("Error: team 1 is corrupted, please make team 1 again.") 
-                            return
-
-                        member = ctx.guild.get_member(memberID)
-                        if member is None:
-                            await ctx.send("Error: could not find one or more users, please make team 1 again.")
-                            return
-
-                        try:
-                            await member.move_to(team1Channel)
-                            await ctx.send("Moved " + "<@" + str(memberID) + ">" + " to " + "<#" + str(team1ID) + ">")
-                        except discord.HTTPException:
-                            await ctx.send("Error: Unable to move " + "<@" + str(memberID) + ">" + " to " + "<#" + str(team1ID) + ">") 
-                    
-                    for memberID in team2:
-                        try:
-                            memberID = int(memberID) 
-                        except ValueError:
-                            await ctx.send("Error: team 2 is corrupted, please make team 2 again.") 
-                            return
-
-                        member = ctx.guild.get_member(memberID)
-                        if member is None:
-                            await ctx.send("Error: could not find one or more users, please make team 2 again.")
-                            return
-
-                        try:
-                            await member.move_to(team2Channel)
-                            await ctx.send("Moved " + "<@" + str(memberID) + ">" + " to " + "<#" + str(team2ID) + ">")
-                        except discord.HTTPException:
-                            await ctx.send("Error: Unable to move " + "<@" + str(memberID) + ">" + " to " + "<#" + str(team2ID) + ">") 
-            else:
-                await ctx.send("You must first set team 1, team 2, team 1 channel and team 2 channel before using this command.")
-        else:
-            await ctx.send("You must first set team 1, team 2, team 1 channel and team 2 channel before using this command.")
-    
+        await ch.sendToTeams(ctx, doc, teams)
     elif location == "main":
-        if doc.exists:
-            data = doc.to_dict()
-            
-            if "voiceMain" in data and "team1" in data and "team2" in data:
-                try:
-                    channelID = int(data["voiceMain"]) 
-                except ValueError:
-                    await ctx.send("Error: main channel preference was corrupted, please set it again.") 
-                    return
-                
-                mainChannel = discord.utils.get(ctx.guild.channels, id = channelID) #Returns None if channel is not found
-                if mainChannel is None:
-                    await ctx.send("Error: couldn't find mainChannel, please try setting it again.") 
-                else:
-                    team1 = data["team1"]
-                    team2 = data["team2"]
-                    for memberID in team1:
-                        try:
-                            memberID = int(memberID) 
-                        except ValueError:
-                            await ctx.send("Error: team 1 is corrupted, please make team 1 again.") 
-                            return
-
-                        member = ctx.guild.get_member(memberID)
-                        if member is None:
-                            await ctx.send("Error: could not find one or more users, please make team 1 again.")
-                            return
-
-                        try:
-                            await member.move_to(mainChannel)
-                            await ctx.send("Moved " + "<@" + str(memberID) + ">" + " to " + "<#" + str(channelID) + ">")
-                        except discord.HTTPException:
-                            await ctx.send("Error: Unable to move " + "<@" + str(memberID) + ">" + " to " + "<#" + str(channelID) + ">") 
-                    
-                    for memberID in team2:
-                        try:
-                            memberID = int(memberID) 
-                        except ValueError:
-                            await ctx.send("Error: team 2 is corrupted, please make team 2 again.") 
-                            return
-
-                        member = ctx.guild.get_member(memberID)
-                        if member is None:
-                            await ctx.send("Error: could not find one or more users, please make team 2 again.")
-                            return
-
-                        try:
-                            await member.move_to(mainChannel)
-                            await ctx.send("Moved " + "<@" + str(memberID) + ">" + " to " + "<#" + str(channelID) + ">")
-                        except discord.HTTPException:
-                            await ctx.send("Error: Unable to move " + "<@" + str(memberID) + ">" + " to " + "<#" + str(channelID) + ">") 
-            else:
-                await ctx.send("You must first set team 1, team 2 and the main channel before using this command.")
-        else:
-            await ctx.send("You must first set team 1, team 2 and the main channel before using this command.")
+        await ch.sendToMain(ctx, doc, teams)
