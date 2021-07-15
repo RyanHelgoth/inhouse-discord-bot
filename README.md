@@ -2,7 +2,7 @@
 - Inhouse Bot is a Discord bot that makes setting up [inhouse games](https://www.urbandictionary.com/define.php?term=inhouse) easier by moving users between team voice channels and a main channel for pre/after match talks. Inhouse Bot also has a randomize feature to make teams for you when you are having trouble deciding how to split teams up.
 
 # How can I add the bot to my discord server?
-- Currently the bot is under development, but after it is done a link will be posted here to add the bot to your server.
+- Click [here](https://discord.com/api/oauth2/authorize?client_id=852327548704915486&permissions=16862208&scope=bot) to add Inhouse Bot to your discord server!
 
 # How do you use the bot?
 - # Overview
