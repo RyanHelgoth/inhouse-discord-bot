@@ -46,21 +46,21 @@ def main():
     '''
     @client.command()
     async def setTeam1(ctx, *args):
-        await cmd.setChannel(ctx, db, args, "one")
+        await cmd.setChannel(ctx, db, args, "Team 1")
     
     '''
     This command sets the team 2 voice channel.
     '''
     @client.command()
     async def setTeam2(ctx, *args):
-        await cmd.setChannel(ctx, db, args, "two")
+        await cmd.setChannel(ctx, db, args, "Team 2")
 
     '''
     This command sets the main voice channel.
     '''
     @client.command()
     async def setMain(ctx, *args):
-        await cmd.setChannel(ctx, db, args, "main")
+        await cmd.setChannel(ctx, db, args, "Main")
 
     '''
     This command randomly splits the users in the main channel into team 1 and team 2.
@@ -81,14 +81,14 @@ def main():
     '''
     @client.command()
     async def makeTeam1(ctx, *args):
-        await cmd.makeTeam(ctx, db, args, "one")
+        await cmd.makeTeam(ctx, db, args, "Team 1")
 
     '''
     This command allows the user to select members to put in team 2.
     '''
     @client.command()
     async def makeTeam2(ctx, *args):
-        await cmd.makeTeam(ctx, db, args, "two")
+        await cmd.makeTeam(ctx, db, args, "Team 2")
 
     client.run(config.botToken)
 

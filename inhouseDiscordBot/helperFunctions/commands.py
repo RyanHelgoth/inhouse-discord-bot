@@ -24,6 +24,7 @@ import random
 -split repeated parts into helper functions and put them in helperFunctions.py
 -add comments
 -change value from 0 to 1
+-use format on strings
 '''
 
 def getDocRef(ctx, db):
@@ -54,7 +55,7 @@ async def help(ctx):
 This function displays the members in team 1 and 2.
 '''
 async def printTeams(ctx, db):
-    teams = {"team1" : [], "team2" : []} #Lists in dictionary are for holding user ids.
+    teams = {"team1" : [], "team2" : []} #Keys are db vars and values are for holding user ids.
     docRef = getDocRef(ctx, db)
     doc = docRef.get()
 
@@ -118,7 +119,7 @@ async def randomizeMain(ctx, db):
                     await printTeams(ctx, db)
                 else:
                     await ctx.send("There must be 2 or more people in the " + "<#" 
-                    + str(channelID) + ">" + " channel to use this command.")
+                    + str(channelID) + ">" + " channel to use this command.") 
         else:
             await ctx.send("You must first set the main channel before using this command") 
     else:
@@ -128,51 +129,31 @@ async def randomizeMain(ctx, db):
 This function lets the user pick a preference for their main
 channel and then saves it in the database. 
 '''
-async def setChannel(ctx, db, args, channel):
+async def setChannel(ctx, db, args, chat):
     channelName = " ".join(args)
     docRef = getDocRef(ctx, db)
+    chats = {"Team 1" : "voice1", "Team 2" : "voice2", "Main" : "voiceMain"} #Values are the variable names in the db.
+    channel = discord.utils.get(ctx.guild.channels, name = channelName)
 
-    if channel == "one":      
-        team1 = discord.utils.get(ctx.guild.channels, name = channelName)
-        if team1 is None:
-            await ctx.send("Could not find a channel named \"" + channelName + "\" please try again.")
-        elif str(team1.type) != "voice":
-            await ctx.send("<#" + str(team1.id) + ">" + " is not a voice channel, you can only set voice channels.")
-        else:
-            data = {"voice1" : str(team1.id)}
-            docRef.set(data, merge = True)
-            await ctx.send("Team 1 channel set to " + "<#" + str(team1.id) + ">")
-
-    elif channel == "two":
-        team2 = discord.utils.get(ctx.guild.channels, name = channelName)
-        if team2 is None:
-            await ctx.send("Could not find a channel named \"" + channelName + "\" please try again.")
-        elif str(team2.type) != "voice":
-            await ctx.send("<#" + str(team2.id) + ">" + " is not a voice channel, you can only set voice channels.")
-        else:
-            data = {"voice2" : str(team2.id)}
-            docRef.set(data, merge = True)
-            await ctx.send("Team 2 channel set to " + "<#" + str(team2.id) + ">")
-
-    elif channel == "main":
-        mainChannel = discord.utils.get(ctx.guild.channels, name = channelName)
-        if mainChannel is None:
-            await ctx.send("Could not find a channel named \"" + channelName + "\" please try again.")
-        elif str(mainChannel.type) != "voice":
-            await ctx.send("<#" + str(mainChannel.id) + ">" + " is not a voice channel, you can only set voice channels.")
-        else:
-            data = {"voiceMain" : str(mainChannel.id)}
-            docRef.set(data, merge = True)
-            await ctx.send("Main channel set to " + "<#" + str(mainChannel.id) + ">")
+    if channel is None:
+        await ctx.send("Could not find a channel named \"" + channelName + "\" please try again.")
+    elif str(channel.type) != "voice":
+        await ctx.send("<#" + str(channel.id) + ">" + " is not a voice channel, you can only set voice channels.")
+    else:
+        data = {chats[chat] : str(channel.id)}
+        docRef.set(data, merge = True)
+        await ctx.send("{} channel set to ".format(chat) + "<#" + str(channel.id) + ">")
 
 '''
 This function lets the user make a team and then then saves the team 
 in the database.
 '''
-async def makeTeam(ctx, db, args, team):
+async def makeTeam(ctx, db, args, teamName):
     docRef = getDocRef(ctx, db)
     doc = docRef.get()
-    members = [] #NOTE members list now contains user id strings and not member objects
+    members = [] #NOTE this list now contains user id strings and not member objects.
+    teams = {"Team 1" : "team1", "Team 2" : "team2"}
+    teamRef = teams[teamName]
 
     #Populates members list with user id's 
     for arg in args:
@@ -194,36 +175,24 @@ async def makeTeam(ctx, db, args, team):
             await ctx.send("Error: You can not add the same user to a team more than once.")
             return
 
-    #Saves teams in database  
-    if team == "one":
-        if doc.exists:
-            data = doc.to_dict()
-            if "team2" in data:
-                team2 = data["team2"]
-                if not set(members).isdisjoint(team2):
-                    #Removes members in team 2 who are being added to team 1.
-                    team2 = list(set(team2) - set(members))
-                    team2Data = {"team2" : team2}
-                    docRef.set(team2Data, merge = True)
-                    await ctx.send("Note: some members have been moved from team 1 to team 2.")
-        data = {"team1" : members}
-        docRef.set(data, merge = True)
-                
-    elif team == "two":
-        if doc.exists:
-            data = doc.to_dict()
-            if "team1" in data:
-                team1 = data["team1"]
-                if not set(members).isdisjoint(team1):
-                    #Removes members in team 1 who are being added to team 2.
-                    team1 = list(set(team1) - set(members))
-                    team1Data = {"team1" : team1}
-                    docRef.set(team1Data, merge = True)
-                    await ctx.send("Note: some members have been moved from team 2 to team 1.")
-        data = {"team2" : members}
-        docRef.set(data, merge = True)
-
-    await ctx.send("Teams successfully updated!")
+    #Saves team to db
+    if doc.exists:
+        data = doc.to_dict()
+        if teamRef in data:
+            opposingTeamNum = str((int(teamRef[-1]) % 2) + 1) #Gets number of opposing team.
+            opposingTeamName = "Team " + opposingTeamNum 
+            opposingTeamRef = teams[opposingTeamName] #Gets db var name for opposing team
+            opposingTeam = data[opposingTeamRef]
+            if not set(members).isdisjoint(opposingTeam):
+                #Removes members in the opposing team who are being added to team choosen by the user.
+                opposingTeam = list(set(opposingTeam) - set(members))
+                data = {opposingTeamRef : opposingTeam}
+                docRef.set(data, merge = True)
+                await ctx.send("Note: some members have been moved from {} to {}.".format(opposingTeamName.lower(), teamName.lower())) 
+    
+    data = {teamRef : members}
+    docRef.set(data, merge = True)
+    await ctx.send("Teams successfully updated to: ")
     await printTeams(ctx, db)
 
 '''
