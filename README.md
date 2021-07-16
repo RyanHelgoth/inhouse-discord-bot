@@ -51,7 +51,7 @@
    
 # How can I run the code on my computer?
 - The code for this bot is available to download and modify, however the code will not run without a discord bot token and a firebase key. These files are private and I cannot share them for security reasons. 
-- To get your own discord bot token you will have to create a bot through the [Discord developer portal](https://discord.com/developers/applications). Then you can put the line token = "YOUR TOKEN HERE" into a file named config.py. Then create a folder called "tokens" and put it in the "inhouseDiscordBot" folder, after put config.py in the tokens folder.
+- To get your own discord bot token you will have to create a bot through the [Discord developer portal](https://discord.com/developers/applications). Then you can put the line botToken = "YOUR TOKEN HERE" into a file named config.py. Then create a folder called "tokens" and put it in the "inhouseDiscordBot" folder, after put config.py in the tokens folder.
 - Next you will have to get your own firebase key. You can do this by setting up a firebase firestore project and generating a key using the [setup guide](https://firebase.google.com/docs/firestore/quickstart). After generating the key you should get a .json file. Name it "firebaseKey.json" and put it in the "tokens" folder you already made. 
 - Lastly you will have to install the firestore library [here](https://firebase.google.com/docs/firestore/quickstart#set_up_your_development_environment) and install the discord library [here](https://discordpy.readthedocs.io/en/stable/intro.html#installing). Now you should be ready to go!
 
