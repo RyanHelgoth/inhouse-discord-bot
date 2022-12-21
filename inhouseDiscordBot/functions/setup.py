@@ -25,7 +25,7 @@ def getClient():
     were not found in voice channels due to not having the 
     members intent enabled.
     '''
-    intents = discord.Intents().default()
+    intents = discord.Intents().all()
     intents.members = True
     botInfo = discord.Activity(type=discord.ActivityType.watching, name = "for !inhousehelp command")
     client = commands.Bot(command_prefix = "!", activity = botInfo, help_command = None, intents = intents, reconnect = True)
